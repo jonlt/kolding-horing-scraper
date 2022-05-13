@@ -13,8 +13,8 @@ const fixRelativeUrl = (relativeUrl, rootUrl) => {
 
 const detailsHandler = async (html, url) => {
     const $ = cheerio.load(html);
-    const titleElements = $('bui-heading[slot=title]')
-    const title = titleElements[0].attribs.title;
+    const titleElements = $('bui-hero-slim')
+    const title = titleElements[0].attribs.heading;
 
     const mainElement = $('bui-container[slot=main] > bui-raw');
     let content = mainElement.html();
@@ -56,9 +56,9 @@ scraper.push({
 
 async function main() {
     console.log("start");
-    await email.init();
-    await database.open();
-    await database.init();
+    //await email.init();
+    //await database.open();
+    //await database.init();
     await scraper.run();
     console.log("done");
 }
