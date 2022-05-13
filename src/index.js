@@ -46,7 +46,7 @@ const listHandler = async (html, url) => {
             handler: detailsHandler
         });
     };
-    //await database.logRun();
+    await database.logRun();
 }
 
 scraper.push({
@@ -56,9 +56,9 @@ scraper.push({
 
 async function main() {
     console.log("start");
-    //await email.init();
-    //await database.open();
-    //await database.init();
+    await email.init();
+    await database.open();
+    await database.init();
     await scraper.run();
     console.log("done");
 }
