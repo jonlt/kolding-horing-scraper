@@ -23,6 +23,9 @@ const createHearingTable = () => {
                 Id integer primary key, 
                 Title text, 
                 Content text,
+                Url text,
+                Location text,
+                Category text,
                 CreatedAt text )`, (err) => {
             if (err) {
                 reject(err);
@@ -84,7 +87,7 @@ const logRun = async () => {
             })
     });
 }
-const insert = async (title, content) => {
+const insert = async (title, content, url, location, category) => {
     const createdAt = (new Date()).toISOString();
 
     const exists = await alreadySeen(title);
@@ -93,9 +96,16 @@ const insert = async (title, content) => {
     }
 
     return new Promise((resolve, reject) => {
-        connection.run(`INSERT INTO hearings (Title, Content, CreatedAt)
-                        VALUES (?, ?, ?)`,
-            [title, content, createdAt], (err) => {
+        connection.run(`INSERT INTO hearings (Title, Content, Url, Location, Category, CreatedAt)
+                        VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                title,
+                content,
+                url,
+                location,
+                category,
+                createdAt
+            ], (err) => {
                 if (err) {
                     reject(err);
                 } else {

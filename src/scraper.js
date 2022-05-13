@@ -12,9 +12,13 @@ const run = async () => {
         let response = await axios.get(scrape.url);
         if (response.status == 200) {
             const html = response.data;
-            await scrape.handler(html, scrape.url);
+            try {
+                await scrape.handler(html, scrape.url);
+            } catch (error) {
+                console.log("[scraper] error in handler", error)
+            }
         } else {
-            console.log("ERROR", response);
+            console.log("[scraper] non-OK response", response);
         }
         scrape = queue.pop();
     }

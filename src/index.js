@@ -5,49 +5,54 @@ const database = require('./database');
 const email = require('./email');
 const scraper = require('./scraper');
 
-const fixRelativeImg = ($, rootUrl) => {
-    $('img').each((i, e) => {
-        const currentValue = $(e).attr('src');
-        const url = new URL(currentValue, rootUrl);
-        const newValue = url.href;
-        $(e).attr('src', newValue);
-    });
-    return $;
+const fixRelativeUrl = (relativeUrl, rootUrl) => {
+    const url = new URL(relativeUrl, rootUrl);
+    const absoluteUrl = url.href;
+    return absoluteUrl;
 }
 
-const fixRelativeA = ($, rootUrl) => {
-    $('a').each((i, e) => {
-        const currentValue = $(e).attr('href');
-        const url = new URL(currentValue, rootUrl);
-        const newValue = url.href;
-        $(e).attr('href', newValue);
-    });
-    return $;
+const detailsHandler = async (html, url) => {
+    const $ = cheerio.load(html);
+    const titleElements = $('bui-heading[slot=title]')
+    const title = titleElements[0].attribs.title;
+
+    const mainElement = $('bui-container[slot=main] > bui-raw');
+    let content = mainElement.html();
+
+    const locationElements = $('bui-meta-info[title=Område]');
+    const location = locationElements[0].attribs.subtitle;
+    const categoryElements = $('bui-meta-info[title=Kategori]');
+    const category = categoryElements[0].attribs.subtitle;
+
+    const didInsert = await database.insert(title, content, url, location, category);
+    if (didInsert) {
+        console.log("sending email " + title);
+        content = `<h3><a href="${url}">LINK</a></h3>` + content;
+        content = `<h3>Kategory: ${category}</h3>` + content;
+        content = `<h3>Område: ${location}</h3>` + content;
+        await email.send(title, content);
+    }
 }
 
+const listHandler = async (html, url) => {
+    const $ = cheerio.load(html);
+    const cards = $('bui-card');
+    for (let i = 0; i < cards.length; i++) {
+        const c = cards[i];
+        const link = c.attribs.url;
+        const absUrl = fixRelativeUrl(link, url);
+        scraper.push({
+            url: absUrl,
+            handler: detailsHandler
+        });
+    };
+    //await database.logRun();
+}
 
-scraper.push(
-    {
-        url: 'https://www.kolding.dk/borger/horinger-afgorelser-planer',
-        handler: async (html, url) => {
-            const $ = cheerio.load(html);
-            fixRelativeImg($, url);
-            fixRelativeA($, url);
-            const cards = $('.card');
-            for(let i = 0; i < cards.length; i++){
-                const c = cards[i];
-                const title = $(c).find('button').text();
-                const content = $(c).find('.card-body').html();
-                const didInsert = await database.insert(title, content);
-                if (didInsert) {
-                    console.log("sending email " + title);
-                    await email.send(title, content);
-                }
-            };
-
-            await database.logRun();
-        }
-    });
+scraper.push({
+    url: 'https://www.kolding.dk/borger/horinger-og-afgorelser/',
+    handler: listHandler
+});
 
 async function main() {
     console.log("start");
