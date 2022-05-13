@@ -1,4 +1,6 @@
 #!/bin/bash
+SCRIPT=$(realpath $0)
+SCRIPTPATH=$(dirname $SCRIPT)
 
-docker run --rm -v $KHS_HOST_DB_PATH:/app/db --env-file $KHS_HOST_ENV_FILE kolding-horing-scraper
+docker run --rm -v $SCRIPTPATH:/app/db --env-file $SCRIPTPATH/.env kolding-horing-scraper
 
